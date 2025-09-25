@@ -2,6 +2,7 @@ const express = require('express')
 const mongoose = require('mongoose')
 const bodyParser = require('body-parser')
 const taskRoutes = require('./routes/taskRoute');
+const { connectRabbitMQWithRetry } = require('./rabbitmq')
 
 
 const app = express()
@@ -32,6 +33,17 @@ app.get('/', (req, res) => {
 
 app.use('/microservice/task', taskRoutes);
 
-app.listen(port, () => {
-  console.log(`Task Service listening on port ${port}`)
-})
+
+
+
+// Start server only after RabbitMQ connected
+async function start() {
+  await connectRabbitMQWithRetry();
+  app.listen(port, () => {
+    console.log(`Task Service listening on port ${port}`);
+  });
+}
+
+start();
+
+
